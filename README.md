@@ -341,7 +341,7 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 - **GitHub**: [@beycanyildiz](https://github.com/beycanyildiz)
 - **LinkedIn**: [Beycan Yıldız](https://linkedin.com/in/beycanyildiz)
-- **Email**: yildfizbeycan59@gmail.com
+- **Email**: yildizbeycan59@gmail.com
 
 ---
 
