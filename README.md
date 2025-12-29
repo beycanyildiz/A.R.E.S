@@ -117,7 +117,7 @@
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/ares.git
+git clone https://github.com/beycanyildiz/A.R.E.S.git
 cd ares
 ```
 
@@ -339,18 +339,18 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 ## 📧 Contact
 
-- **GitHub**: [@yourusername](https://github.com/yourusername)
-- **LinkedIn**: [Your Name](https://linkedin.com/in/yourprofile)
-- **Email**: your.email@example.com
+- **GitHub**: [@beycanyildiz](https://github.com/beycanyildiz)
+- **LinkedIn**: [Beycan Yıldız](https://linkedin.com/in/beycanyildiz)
+- **Email**: yildfizbeycan59@gmail.com
 
 ---
 
 <div align="center">
 
-**Built with ❤️ for the cybersecurity community**
+**Built with ❤️ by Beycan YILDIZ for the cybersecurity community**
 
 ⭐ Star this repo if you find it useful!
 
-[Report Bug](https://github.com/yourusername/ares/issues) • [Request Feature](https://github.com/yourusername/ares/issues)
+[Report Bug](https://github.com/beycanyildiz/A.R.E.S./issues) • [Request Feature](https://github.com/beycanyildiz/A.R.E.S./issues)
 
 </div>
