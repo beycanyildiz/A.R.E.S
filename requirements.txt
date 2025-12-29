@@ -1,0 +1,100 @@
+# ==========================================
+# CORE DEPENDENCIES
+# ==========================================
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
+python-dotenv==1.0.0
+
+# ==========================================
+# ASYNC & MESSAGING
+# ==========================================
+aio-pika==9.3.1
+redis[hiredis]==5.0.1
+asyncio==3.4.3
+aiohttp==3.9.1
+
+# ==========================================
+# DATABASES
+# ==========================================
+# Vector DB
+pymilvus==2.3.4
+sentence-transformers==2.3.1
+
+# Graph DB
+neo4j==5.16.0
+
+# ==========================================
+# LLM & AI (PHASE 2 - Enhanced with Gemini)
+# ==========================================
+openai==1.10.0
+google-generativeai==0.3.2
+
+# LangChain ecosystem
+langchain==0.1.4
+langchain-openai==0.0.5
+langchain-google-genai==0.0.5
+langchain-core==0.1.23
+langchain-community==0.0.20
+
+# LangGraph for multi-agent workflows
+langgraph==0.0.20
+langgraph-checkpoint==0.0.1
+
+# Token counting and optimization
+tiktoken==0.5.2
+
+# AutoGen (optional - for advanced multi-agent)
+# pyautogen==0.2.0
+
+# ==========================================
+# SECURITY & RECON
+# ==========================================
+python-nmap==0.7.1
+scapy==2.5.0
+dnspython==2.4.2
+requests==2.31.0
+beautifulsoup4==4.12.3
+lxml==5.1.0
+
+# ==========================================
+# MONITORING & METRICS
+# ==========================================
+prometheus-client==0.19.0
+python-json-logger==2.0.7
+
+# ==========================================
+# UTILITIES
+# ==========================================
+pyyaml==6.0.1
+click==8.1.7
+rich==13.7.0
+httpx==0.26.0
+
+# ==========================================
+# TESTING (Optional)
+# ==========================================
+pytest==7.4.4
+pytest-asyncio==0.23.3
+pytest-cov==4.1.0
+faker==22.0.0
+
+# ==========================================
+# PHASE 3 - Sandbox Execution & Evasion
+# ==========================================
+# Kubernetes & Docker
+kubernetes==28.1.0
+docker==7.0.0
+
+# Proxy & Anonymity
+aiohttp-socks==0.8.4
+pysocks==1.7.1
+stem==1.8.2  # TOR control
+
+# System monitoring
+psutil==5.9.7
+wmi==1.5.1; sys_platform == 'win32'  # Windows only
+
+# Network tools
+scapy==2.5.0  # Already in Phase 1 but needed here too

@@ -1,0 +1,121 @@
+# A.R.E.S. Kubernetes Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ares-sandbox
+  labels:
+    name: ares-sandbox
+    purpose: exploit-execution
+
+---
+# Resource Quota for Sandbox Namespace
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: sandbox-quota
+  namespace: ares-sandbox
+spec:
+  hard:
+    requests.cpu: "10"
+    requests.memory: 10Gi
+    limits.cpu: "20"
+    limits.memory: 20Gi
+    pods: "50"  # Max 50 concurrent exploit pods
+
+---
+# Network Policy - Isolate Sandbox Pods
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sandbox-isolation
+  namespace: ares-sandbox
+spec:
+  podSelector:
+    matchLabels:
+      app: ares-sandbox
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress: []  # No incoming traffic allowed
+  egress:
+    # Allow DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+    # Allow outbound to internet (for exploits)
+    - to:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 443
+
+---
+# Service Account for Sandbox Pods
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sandbox-executor
+  namespace: ares-sandbox
+
+---
+# Role for Sandbox Executor
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: sandbox-executor-role
+  namespace: ares-sandbox
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["create", "get", "list", "watch", "delete"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create"]
+
+---
+# Role Binding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sandbox-executor-binding
+  namespace: ares-sandbox
+subjects:
+  - kind: ServiceAccount
+    name: sandbox-executor
+    namespace: ares-sandbox
+roleRef:
+  kind: Role
+  name: sandbox-executor-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Pod Security Policy (if enabled)
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: ares-sandbox-psp
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - 'emptyDir'
+    - 'configMap'
+    - 'secret'
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: 'MustRunAsNonRoot'
+  seLinux:
+    rule: 'RunAsAny'
+  fsGroup:
+    rule: 'RunAsAny'
+  readOnlyRootFilesystem: true

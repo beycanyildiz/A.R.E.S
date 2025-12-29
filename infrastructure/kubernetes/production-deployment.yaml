@@ -1,0 +1,212 @@
+# A.R.E.S. Production Deployment
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ares-production
+
+---
+# ConfigMap for environment variables
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ares-config
+  namespace: ares-production
+data:
+  ORCHESTRATOR_HOST: "0.0.0.0"
+  ORCHESTRATOR_PORT: "8000"
+  LOG_LEVEL: "INFO"
+  ENVIRONMENT: "production"
+  MILVUS_HOST: "ares-milvus"
+  MILVUS_PORT: "19530"
+  NEO4J_URI: "bolt://ares-neo4j:7687"
+  REDIS_URL: "redis://:${REDIS_PASSWORD}@ares-redis:6379/0"
+
+---
+# Secret for sensitive data
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ares-secrets
+  namespace: ares-production
+type: Opaque
+stringData:
+  OPENAI_API_KEY: "sk-your-openai-key-here"
+  GOOGLE_API_KEY: "your-google-gemini-api-key-here"
+  REDIS_PASSWORD: "your-redis-password"
+  NEO4J_PASSWORD: "your-neo4j-password"
+  JWT_SECRET: "your-jwt-secret"
+
+---
+# Deployment for Orchestrator
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ares-orchestrator
+  namespace: ares-production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ares-orchestrator
+  template:
+    metadata:
+      labels:
+        app: ares-orchestrator
+    spec:
+      serviceAccountName: ares-service-account
+      
+      containers:
+      - name: orchestrator
+        image: ares/orchestrator:latest
+        imagePullPolicy: Always
+        
+        ports:
+        - containerPort: 8000
+          name: http
+        
+        envFrom:
+        - configMapRef:
+            name: ares-config
+        - secretRef:
+            name: ares-secrets
+        
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "2000m"
+            memory: "4Gi"
+        
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+
+---
+# Service for Orchestrator
+apiVersion: v1
+kind: Service
+metadata:
+  name: ares-orchestrator
+  namespace: ares-production
+spec:
+  selector:
+    app: ares-orchestrator
+  ports:
+  - port: 8000
+    targetPort: 8000
+    name: http
+  type: ClusterIP
+
+---
+# Horizontal Pod Autoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ares-orchestrator-hpa
+  namespace: ares-production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ares-orchestrator
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+# Ingress for external access
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ares-ingress
+  namespace: ares-production
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - ares.yourdomain.com
+    secretName: ares-tls
+  rules:
+  - host: ares.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ares-orchestrator
+            port:
+              number: 8000
+
+---
+# Service Account
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ares-service-account
+  namespace: ares-production
+
+---
+# Role for orchestrator
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ares-orchestrator-role
+  namespace: ares-production
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/log"]
+  verbs: ["get", "list", "watch", "create", "delete"]
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list"]
+
+---
+# Role Binding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ares-orchestrator-binding
+  namespace: ares-production
+subjects:
+- kind: ServiceAccount
+  name: ares-service-account
+roleRef:
+  kind: Role
+  name: ares-orchestrator-role
+  apiGroup: rbac.authorization.k8s.io
